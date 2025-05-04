@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Ular Nokia</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #111;
+      color: white;
+    }
+    canvas {
+      background: #222;
+      margin-top: 10px;
+    }
+    .controls {
+      margin-top: 15px;
+    }
+    .controls button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 18px;
+    }
+    #score, #best {
+      font-size: 18px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Game Ular Nokia</h1>
+  <div id="score">Skor: 0</div>
+  <div id="best">Skor Tertinggi: 0</div>
+  <canvas id="game" width="300" height="300"></canvas>
+  <div class="controls">
+    <div>
+      <button onclick="changeDirection('up')">Atas</button>
+    </div>
+    <div>
+      <button onclick="changeDirection('left')">Kiri</button>
+      <button onclick="changeDirection('down')">Bawah</button>
+      <button onclick="changeDirection('right')">Kanan</button>
+    </div>
+    <button onclick="restartGame()">Restart</button>
+  </div>
+
+  <p style="margin-top: 20px; font-size: 16px; color: #888;">by: Rapa</p>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const box = 15;
+    const rows = canvas.width / box;
+    const cols = canvas.height / box;
+    let score = 0;
+    let bestScore = localStorage.getItem('bestScore') || 0;
+    document.getElementById('best').innerText = 'Skor Tertinggi: ' + bestScore;
+
+    let direction = 'right';
+    let snake = [{ x: 5 * box, y: 5 * box }];
+    let food = {
+      x: Math.floor(Math.random() * rows) * box,
+      y: Math.floor(Math.random() * cols) * box
+    };
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? 'lime' : 'green';
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let head = { x: snake[0].x, y: snake[0].y };
+      if (direction === 'right') head.x += box;
+      if (direction === 'left') head.x -= box;
+      if (direction === 'up') head.y -= box;
+      if (direction === 'down') head.y += box;
+
+      // tembus dinding
+      if (head.x >= canvas.width) head.x = 0;
+      if (head.x < 0) head.x = canvas.width - box;
+      if (head.y >= canvas.height) head.y = 0;
+      if (head.y < 0) head.y = canvas.height - box;
+
+      // tabrakan badan
+      if (snake.some((seg, idx) => idx > 0 && seg.x === head.x && seg.y === head.y)) {
+        clearInterval(game);
+        alert('Yah kalah🤭 Skor kamu: ' + score);
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById('score').innerText = 'Skor: ' + score;
+
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem('bestScore', bestScore);
+          document.getElementById('best').innerText = 'Skor Tertinggi: ' + bestScore;
+        }
+
+        food = {
+          x: Math.floor(Math.random() * rows) * box,
+          y: Math.floor(Math.random() * cols) * box
+        };
+      } else {
+        snake.pop();
+      }
+    }
+
+    function changeDirection(newDir) {
+      const opposites = {
+        up: 'down',
+        down: 'up',
+        left: 'right',
+        right: 'left'
+      };
+      if (newDir !== opposites[direction]) {
+        direction = newDir;
+      }
+    }
+
+    function restartGame() {
+      score = 0;
+      direction = 'right';
+      snake = [{ x: 5 * box, y: 5 * box }];
+      food = {
+        x: Math.floor(Math.random() * rows) * box,
+        y: Math.floor(Math.random() * cols) * box
+      };
+      document.getElementById('score').innerText = 'Skor: 0';
+      clearInterval(game);
+      game = setInterval(draw, 100); // FPS lebih cepat
+    }
+
+    let game = setInterval(draw, 100); // FPS default
+  </script>
+</body>
+</html>
